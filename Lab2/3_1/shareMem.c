@@ -10,10 +10,10 @@
 #include<sys/wait.h>
 #include<string.h>
 #include<regex.h>
-//int n=1682;
-//int m=943;
-int n=10;
-int m=5;
+int n=1682;
+int m=943;
+//int n=10;
+//int m=5;
 int shmid;
 
 struct Rating{
@@ -24,7 +24,7 @@ struct Rating{
 };
 
 
-struct Rating Regex(char *source){
+void Regex(char *source){
     char * regexString = "([0-9]+)\t([0-9]+)\t([0-9]+)\t([0-9]+)";
     size_t maxMatches = 1;
     size_t maxGroups = 5;
@@ -34,10 +34,10 @@ struct Rating Regex(char *source){
     unsigned int m;
     char * cursor;
 
-    struct Rating result = {0,0,0,0};
+    //struct Rating result = {0,0,0,0};
     if (regcomp(&regexCompiled, regexString, REG_EXTENDED)){
         printf("Could not compile regular expression.\n");
-        return result;
+        return ;
     };
 
     m = 0;
@@ -49,7 +49,7 @@ struct Rating Regex(char *source){
 
         unsigned int g = 0;
         unsigned int offset = 0;
-        char* saveData[5];
+        int saveData[5];
 
         for (g = 0; g < maxGroups; g++)
         {
@@ -58,7 +58,7 @@ struct Rating Regex(char *source){
 
             if (g == 0){
                 offset = groupArray[g].rm_eo;
-                continue;
+                //continue;
             }
                 
 
@@ -66,13 +66,28 @@ struct Rating Regex(char *source){
             strcpy(cursorCopy, cursor);
             cursorCopy[groupArray[g].rm_eo] = 0;
             //printf("Match %u, Group %u: [%2u-%2u]: %s\n", m, g, groupArray[g].rm_so, groupArray[g].rm_eo, cursorCopy + groupArray[g].rm_so);
-            saveData[g] = cursorCopy + groupArray[g].rm_so;
+            saveData[g] = atoi( cursorCopy + groupArray[g].rm_so);
+            
         }
         cursor += offset;
-    }
+        
 
+        //struct Rating getData = {saveData[1],saveData[2],saveData[3],saveData[4]};
+        //result = getData;
+        //printf("%u, %u, %u, %u\n", saveData[1],saveData[2],saveData[3],saveData[4]);
+
+        double (*getter)[n];
+        getter = shmat(shmid,0,0);
+        getter[saveData[1]][saveData[2]] = saveData[3];
+        printf("say %f\n", getter[saveData[1]][saveData[2]]);
+        if(shmdt(getter)==-1){
+            perror("Problem of detachment");
+            exit(1);
+        }
+    }
+    //printf("%u, %u, %u, %u\n", result.userId, result.movieId, result.rating, result.timeStamp);
     regfree(&regexCompiled);
-    return result;
+    return ;
 }
 
 int ReadFile(){
@@ -101,7 +116,7 @@ int main(){
     double (*vector)[n];
        
        
-    shmid = shmget(IPC_PRIVATE, sizeof(double)*n*m*2,0666|IPC_CREAT);
+    shmid = shmget(IPC_PRIVATE, sizeof(double)*n*m*4,0666|IPC_CREAT);
        
     if(shmid<0){
 	    perror("Fail to create shm \n");
@@ -119,15 +134,16 @@ int main(){
        	       
         for(int i=0;i<n;i++)
 	        for(int j=0;j<m;j++)
-		        vector[i][j]=-1;
+		        vector[i][j]=0;
         int pid= fork();
+
         if(!pid){
             printf("pid = %d \n",pid);
             double (*vec)[n];
             vec = shmat(shmid,0,0);
             for(int i=0;i<n;i++){
                 for(int j=0;j<m;j++)
-                    vec[i][j]=2;
+                    ;//vec[i][j]=2;
 
             }
             ReadFile();
@@ -143,6 +159,7 @@ int main(){
                 for(int j=0;j<m;j++)
                     printf( "%f ", vector[i][j]);
                 printf("\n");
+                
             }  
             if(shmdt(vector)==-1){
                 perror("Fail to detach.");
