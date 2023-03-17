@@ -10,8 +10,8 @@
 #include<sys/wait.h>
 #include<string.h>
 #include<regex.h>
-int n=1682;
-int m=943;
+int m=1682;
+int n=943;
 //int n=10;
 //int m=5;
 int shmid;
@@ -79,7 +79,7 @@ void Regex(char *source){
         double (*getter)[n];
         getter = shmat(shmid,0,0);
         getter[saveData[1]][saveData[2]] = saveData[3];
-        printf("say %f\n", getter[saveData[1]][saveData[2]]);
+        //printf("say %f\n", getter[saveData[1]][saveData[2]]);
         if(shmdt(getter)==-1){
             perror("Problem of detachment");
             exit(1);
@@ -134,7 +134,7 @@ int main(){
        	       
         for(int i=0;i<n;i++)
 	        for(int j=0;j<m;j++)
-		        vector[i][j]=0;
+		        vector[i][j]= -1;
         int pid= fork();
 
         if(!pid){
@@ -155,10 +155,17 @@ int main(){
         else{
             wait(NULL);
             printf("parent childpid = %d\n",pid);
-            for(int i=0;i<n;i++){
-                for(int j=0;j<m;j++)
-                    printf( "%f ", vector[i][j]);
-                printf("\n");
+            for(int j=0;j<m;j++){
+
+                double sum = 0, person = 0;
+
+                for(int i=0;i<n;i++)
+                    if(vector[i][j] != -1){
+                        sum+= vector[i][j];
+                        person+=1;
+                    }
+                    
+                if(person >0) printf("Movie ID = %d, Number of User = %d, Averager Rating = %f\n", j,(int) person,sum/person);
                 
             }  
             if(shmdt(vector)==-1){
