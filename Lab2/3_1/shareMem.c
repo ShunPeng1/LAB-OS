@@ -90,12 +90,12 @@ void Regex(char *source){
     return ;
 }
 
-int ReadFile(){
+int ReadFile(char * fileName){
     FILE    *textfile;
     int MAX_LINE_LENGTH = 100;
     char    *line;
      
-    textfile = fopen("movie-100k_1.txt", "r");
+    textfile = fopen(fileName, "r");
     if(textfile == NULL)
         return 1;
      
@@ -109,12 +109,7 @@ int ReadFile(){
 }
 
 
-
-int main(){
-       
-       
-    double (*vector)[n];
-       
+void InitBuffer(){
        
     shmid = shmget(IPC_PRIVATE, sizeof(double)*n*m*4,0666|IPC_CREAT);
        
@@ -122,63 +117,123 @@ int main(){
 	    perror("Fail to create shm \n");
 	    exit(1);
     }
-    else{
-	    printf("shmid = %d\n",shmid);
-	       
-        vector = shmat(shmid,0,0);
-        if(vector==(void *)-1){
-            perror("could not get shm \n");
-	        exit(1);
-        } 
-      
-       	       
+    
+}
+
+void PrintBuffer(){
+    double (*vector)[n];
+    vector = shmat(shmid,0,0);
+    if(vector==(void *)-1){
+        perror("could not get shm \n");
+        exit(1);
+    } 
+    
+    for(int j=0;j<m;j++){
+
+        double sum = 0, person = 0;
+
         for(int i=0;i<n;i++)
-	        for(int j=0;j<m;j++)
-		        vector[i][j]= -1;
-        int pid= fork();
-
-        if(!pid){
-            printf("pid = %d \n",pid);
-            double (*vec)[n];
-            vec = shmat(shmid,0,0);
-            for(int i=0;i<n;i++){
-                for(int j=0;j<m;j++)
-                    ;//vec[i][j]=2;
-
+            if(vector[i][j] != -1){
+                sum+= vector[i][j];
+                person+=1;
             }
-            ReadFile();
-            if(shmdt(vec)==-1){
-                perror("Problem of detachment");
-                exit(1);
-            }
-        }
-        else{
-            wait(NULL);
-            printf("parent childpid = %d\n",pid);
-            for(int j=0;j<m;j++){
-
-                double sum = 0, person = 0;
-
-                for(int i=0;i<n;i++)
-                    if(vector[i][j] != -1){
-                        sum+= vector[i][j];
-                        person+=1;
-                    }
-                    
-                if(person >0) printf("Movie ID = %d, Number of User = %d, Averager Rating = %f\n", j,(int) person,sum/person);
-                
-            }  
-            if(shmdt(vector)==-1){
-                perror("Fail to detach.");
-                exit(1);
-            }
-            if(shmctl(shmid,IPC_RMID,0)==-1){
-                perror("Fail to destroy the segment");
-                exit(1);
-            }
-
-        }
+            
+        if(person >0) printf("Movie ID = %d, Number of User = %d, Averager Rating = %f\n", j,(int) person,sum/person);
+        
+    }  
+    if(shmdt(vector)==-1){
+        perror("Fail to detach.");
+        exit(1);
     }
-       return 0;
+}
 
+void ResetBuffer(){
+    double (*vector)[n];
+    vector = shmat(shmid,0,0);
+    if(vector==(void *)-1){
+        perror("Reset could not get shm \n");
+        exit(1);
+    } 
+
+    for(int i=0;i<n;i++)
+        for(int j=0;j<m;j++)
+            vector[i][j]= -1;
+
+    printf("RESET ");
+    
+    if(shmdt(vector)==-1){
+        perror("Fail to detach.");
+        exit(1);
+    }
+}
+
+void CalculateAverage(char *filename){
+    double (*vector)[n];
+    vector = shmat(shmid,0,0);
+    for(int i=0;i<n;i++){
+        for(int j=0;j<m;j++)
+            ;//vec[i][j]=2;
+
+    }
+    ReadFile(filename);
+    if(shmdt(vector)==-1){
+        perror("Problem of detachment");
+        exit(1);
+    }   
+}
+
+void DestroyBuffer(){
+    if(shmctl(shmid,IPC_RMID,0)==-1){
+        perror("Fail to destroy the segment");
+        exit(1);
+    }
+}
+
+int main(){
+    InitBuffer();
+    pid_t child_a, child_b;
+
+    child_a = fork();
+
+    if (child_a == 0) {
+        /* Child A code */
+        printf("Test case 1");
+        CalculateAverage("movie-100k_1.txt");
+        printf("1 finish");
+        
+        return 0;
+    } 
+
+    wait(NULL);
+    PrintBuffer();
+    ResetBuffer();
+    PrintBuffer();
+    child_b = fork();
+
+    printf("Test case 2");
+
+    if (child_b == 0) {
+        /* Child B code */
+
+        printf("Hi");
+        CalculateAverage("movie-100k_2.txt");
+        
+        printf("Hi");
+    } 
+    else if (child_b == -1){
+        printf("broken b");
+    }
+    else {
+        printf("Hello cc");
+        
+        wait(NULL);
+        PrintBuffer();
+        ResetBuffer();
+        /* Parent Code */
+        printf("Hello cc");
+        
+    }
+    DestroyBuffer();
+
+    return 0;
 }
