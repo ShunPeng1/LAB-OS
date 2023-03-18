@@ -16,14 +16,6 @@ int n=943;
 //int m=5;
 int shmid;
 
-struct Rating{
-    int userId;
-    int movieId;
-    int rating;
-    int timeStamp;
-};
-
-
 void Regex(char *source){
     char * regexString = "([0-9]+)\t([0-9]+)\t([0-9]+)\t([0-9]+)";
     size_t maxMatches = 1;
@@ -31,18 +23,18 @@ void Regex(char *source){
     
     regex_t regexCompiled;
     regmatch_t groupArray[maxGroups];
-    unsigned int m;
+    unsigned int match;
     char * cursor;
 
-    //struct Rating result = {0,0,0,0};
+    
     if (regcomp(&regexCompiled, regexString, REG_EXTENDED)){
         printf("Could not compile regular expression.\n");
         return ;
     };
 
-    m = 0;
+    
     cursor = source;
-    for (m = 0; m < maxMatches; m ++)
+    for (match = 0; match < maxMatches; match ++)
     {
         if (regexec(&regexCompiled, cursor, maxGroups, groupArray, 0))
             break;  // No more matches
@@ -65,42 +57,42 @@ void Regex(char *source){
             char cursorCopy[strlen(cursor) + 1];
             strcpy(cursorCopy, cursor);
             cursorCopy[groupArray[g].rm_eo] = 0;
-            //printf("Match %u, Group %u: [%2u-%2u]: %s\n", m, g, groupArray[g].rm_so, groupArray[g].rm_eo, cursorCopy + groupArray[g].rm_so);
+            printf("Match %u, Group %u: [%2u-%2u]: %s\n", match, g, groupArray[g].rm_so, groupArray[g].rm_eo, cursorCopy + groupArray[g].rm_so);
             saveData[g] = atoi( cursorCopy + groupArray[g].rm_so);
             
         }
         cursor += offset;
         
-
-        //struct Rating getData = {saveData[1],saveData[2],saveData[3],saveData[4]};
-        //result = getData;
-        //printf("%u, %u, %u, %u\n", saveData[1],saveData[2],saveData[3],saveData[4]);
+        printf("%u, %u, %u, %u\n", saveData[1],saveData[2],saveData[3],saveData[4]);
 
         double (*getter)[n];
         getter = shmat(shmid,0,0);
         getter[saveData[1]][saveData[2]] = saveData[3];
-        //printf("say %f\n", getter[saveData[1]][saveData[2]]);
+        printf("say %f\n", getter[saveData[1]][saveData[2]]);
         if(shmdt(getter)==-1){
             perror("Problem of detachment");
             exit(1);
         }
     }
-    //printf("%u, %u, %u, %u\n", result.userId, result.movieId, result.rating, result.timeStamp);
+    
     regfree(&regexCompiled);
     return ;
 }
 
 int ReadFile(char * fileName){
     FILE    *textfile;
-    int MAX_LINE_LENGTH = 100;
+    static int MAX_LINE_LENGTH = 50;
     char    *line;
      
     textfile = fopen(fileName, "r");
-    if(textfile == NULL)
+    if(textfile == NULL){
+        printf("Fail get the file\n");
         return 1;
-     
+    }
+        
+    printf("File %s\n" , fileName);
     while(fgets(line, MAX_LINE_LENGTH, textfile)){
-        //printf(line);
+        printf("Print line : %s \n",line);
         Regex(line);
     }
      
@@ -159,7 +151,7 @@ void ResetBuffer(){
         for(int j=0;j<m;j++)
             vector[i][j]= -1;
 
-    printf("RESET ");
+    //printf("RESET ");
     
     if(shmdt(vector)==-1){
         perror("Fail to detach.");
@@ -170,11 +162,8 @@ void ResetBuffer(){
 void CalculateAverage(char *filename){
     double (*vector)[n];
     vector = shmat(shmid,0,0);
-    for(int i=0;i<n;i++){
-        for(int j=0;j<m;j++)
-            ;//vec[i][j]=2;
-
-    }
+    
+    
     ReadFile(filename);
     if(shmdt(vector)==-1){
         perror("Problem of detachment");
@@ -198,7 +187,8 @@ int main(){
     if (child_a == 0) {
         /* Child A code */
         printf("Test case 1");
-        CalculateAverage("movie-100k_1.txt");
+        char *file = "movie-100k_1.txt";
+        CalculateAverage(file);
         printf("1 finish");
         
         return 0;
@@ -207,7 +197,6 @@ int main(){
     wait(NULL);
     PrintBuffer();
     ResetBuffer();
-    PrintBuffer();
     child_b = fork();
 
     printf("Test case 2");
@@ -215,22 +204,22 @@ int main(){
     if (child_b == 0) {
         /* Child B code */
 
-        printf("Hi");
+        //printf("Hi");
         CalculateAverage("movie-100k_2.txt");
         
-        printf("Hi");
+        //printf("Hi");
     } 
     else if (child_b == -1){
-        printf("broken b");
+        //printf("broken b");
     }
     else {
-        printf("Hello cc");
+        //printf("Hello cc");
         
         wait(NULL);
         PrintBuffer();
         ResetBuffer();
         /* Parent Code */
-        printf("Hello cc");
+        //printf("Hello cc");
         
     }
     DestroyBuffer();
