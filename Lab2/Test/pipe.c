@@ -15,7 +15,7 @@ int main ( ) {
     // Child process
     if( pid == 0) {
         read( pipe_fds[ 0 ] , readmessage , sizeof( readmessage ) ) ;
-        printf("Child Process : Reading , message id %s\n" , readmessage ) ;
+        printf("Child Process : Reading , message is %s\n" , readmessage ) ;
         return 0;
     }
     //Parent process
