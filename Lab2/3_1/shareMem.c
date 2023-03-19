@@ -213,7 +213,7 @@ int main(){
         printf("Test case 1\n");
         char *file = "movie-100k_1.txt";
         CalculateAverage(file);
-        printf("1 finish");
+        //printf("1 finish");
         
         return 0;
     } 

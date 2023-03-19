@@ -1,0 +1,6 @@
+all: calc.o
+	gcc calc.o -o calc
+calc.o: calc.c calc.h
+	gcc -c calc.c
+clean:
+	rm -f *.o calc
