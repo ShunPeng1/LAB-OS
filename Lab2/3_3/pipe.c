@@ -16,7 +16,7 @@ void WRITE_TO_PARENT(void) {
   /* send parent a message through pipe */
   // TODO
     counter++;
-    write ( pipe_fd1 [ 1 ] , &counter , sizeof( counter ) ) ;
+    write ( pipe_fd2 [ 1 ] , &counter , sizeof( counter ) ) ;
     printf("Child sends message to parent: %d\n" , counter);
 }
 
@@ -31,7 +31,7 @@ void WRITE_TO_CHILD(void) {
   /* send child a message through pipe */
   // TODO
     counter++;
-    write ( pipe_fd2 [ 1 ] , &counter , sizeof( counter ) ) ;
+    write ( pipe_fd1 [ 1 ] , &counter , sizeof( counter ) ) ;
     printf("Parent sends message to child: %d\n" , counter);
 }
 
