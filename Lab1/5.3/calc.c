@@ -1,26 +1,76 @@
+#include <stdio.h>
 #include <stdlib.h>
-#include "calc.h"
-int main(void){
-	char op;
-	char s[20], a[10], b[10];
-	float ans;
-	FILE* ptr = fopen("answer.txt", "r");
-	fscanf(ptr, "%f", &ans);
-	fclose(ptr);
-	system("clear");
-	printf(">> ");
-	scanf("%[^\n]%*c", s);
-	sscanf(s, "%s %c %s", a, &op, b);
-	while(strcmp(a, "EXIT") != 0){
-		arithmetic(&ans, a, b, op);
-		ptr = fopen("answer.txt", "w");
-		fprintf(ptr, "%f", ans);
-		fclose(ptr);
-		getchar();
-		system("clear");
-		printf(">> ");
-		scanf(" %[^\n]%*c", s);
-		sscanf(s, "%s %c %s", a, &op, b);
-	}
-	return 0;
+#include <string.h>
+#include "logic.h"
+
+
+int main() {
+    char input[100];
+    char hist[100][100];
+    float ans = 0;
+    int len = 0;
+
+    FILE *fp;
+    fp = fopen("calc_data.txt", "w+");
+    fprintf(fp, "%f\n", ans);
+    fclose(fp);
+
+    while (1) {
+        printf(">> ");
+        fgets(input, 100, stdin);
+
+        if (strcmp(input, "EXIT\n") == 0) {
+            return 0;
+        }
+
+        if (strcmp(input, "HIST\n") == 0) {
+            history(hist, len);
+            continue;
+        }
+
+        char *token;
+        char *args[3];
+        int i = 0;
+
+        token = strtok(input, " \n");
+        while (token != NULL) {
+            args[i++] = token;
+            token = strtok(NULL, " \n");
+        }
+
+        if (i != 3) {
+            printf("SYNTAX ERROR\n");
+            continue;
+        }
+
+        float first;
+        if (strcmp(args[0], "ANS") == 0) {
+            FILE *fp = fopen("calc_data.txt", "r");
+            fscanf(fp, "%f", &first);
+            fclose(fp);
+        } else {
+            first = atof(args[0]);
+        }
+
+        char operator = args[1][0];
+
+        float second;
+        if (strcmp(args[2], "ANS") == 0) {
+            FILE *fp = fopen("calc_data.txt", "r");
+            fscanf(fp, "%f", &second);
+            fclose(fp);
+        } else {
+            second = atof(args[2]);
+        }
+
+        calculate(first, operator, second, &ans);
+
+        fp = fopen("calc_data.txt", "w+");
+        fprintf(fp, "%f\n", ans);
+        fclose(fp);
+
+        sprintf(hist[len++], "%s %c %s = %f", args[0], operator, args[2], ans);
+    }
+
+    return 0;
 }

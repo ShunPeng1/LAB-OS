@@ -4,7 +4,7 @@ input2 := sum_multi-thread.c
 output2 := sum_multi-thread
 
 
-create: 
+all: 
 	gcc -o ${output1} ${input1}
 	gcc -o ${output2} ${input2}
 
