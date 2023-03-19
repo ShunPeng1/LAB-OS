@@ -57,18 +57,18 @@ void Regex(char *source){
             char cursorCopy[strlen(cursor) + 1];
             strcpy(cursorCopy, cursor);
             cursorCopy[groupArray[g].rm_eo] = 0;
-            printf("Match %u, Group %u: [%2u-%2u]: %s\n", match, g, groupArray[g].rm_so, groupArray[g].rm_eo, cursorCopy + groupArray[g].rm_so);
+            //printf("Match %u, Group %u: [%2u-%2u]: %s\n", match, g, groupArray[g].rm_so, groupArray[g].rm_eo, cursorCopy + groupArray[g].rm_so);
             saveData[g] = atoi( cursorCopy + groupArray[g].rm_so);
             
         }
         cursor += offset;
         
-        printf("%u, %u, %u, %u\n", saveData[1],saveData[2],saveData[3],saveData[4]);
+        //printf("%u, %u, %u, %u\n", saveData[1],saveData[2],saveData[3],saveData[4]);
 
         double (*getter)[n];
         getter = shmat(shmid,0,0);
         getter[saveData[1]][saveData[2]] = saveData[3];
-        printf("say %f\n", getter[saveData[1]][saveData[2]]);
+        //printf("say %f\n", getter[saveData[1]][saveData[2]]);
         if(shmdt(getter)==-1){
             perror("Problem of detachment");
             exit(1);
@@ -78,7 +78,7 @@ void Regex(char *source){
     regfree(&regexCompiled);
     return ;
 }
-
+/*
 int ReadFile(char * fileName){
     FILE    *textfile;
     static int MAX_LINE_LENGTH = 50;
@@ -99,18 +99,30 @@ int ReadFile(char * fileName){
     fclose(textfile);
     return 0;
 }
+*/
 
-
-void InitBuffer(){
-       
-    shmid = shmget(IPC_PRIVATE, sizeof(double)*n*m*4,0666|IPC_CREAT);
-       
-    if(shmid<0){
-	    perror("Fail to create shm \n");
-	    exit(1);
+int ReadFile(char *fileName){
+    FILE *textfile;
+    static int MAX_LINE_LENGTH = 50;
+    char *line = malloc(MAX_LINE_LENGTH * sizeof(char));  // Allocate memory for line
+     
+    textfile = fopen(fileName, "r");
+    if(textfile == NULL){
+        printf("Fail get the file\n");
+        return 1;
     }
-    
+        
+    printf("File %s\n", fileName);
+    while(fgets(line, MAX_LINE_LENGTH, textfile)){
+        //printf("Print line : %s \n", line);
+        Regex(line);
+    }
+     
+    fclose(textfile);
+    free(line);  // Free memory allocated for line
+    return 0;
 }
+
 
 void PrintBuffer(){
     double (*vector)[n];
@@ -125,7 +137,7 @@ void PrintBuffer(){
         double sum = 0, person = 0;
 
         for(int i=0;i<n;i++)
-            if(vector[i][j] != -1){
+            if(vector[i][j] != -1.0){
                 sum+= vector[i][j];
                 person+=1;
             }
@@ -149,14 +161,26 @@ void ResetBuffer(){
 
     for(int i=0;i<n;i++)
         for(int j=0;j<m;j++)
-            vector[i][j]= -1;
+            vector[i][j]= -1.0;
 
-    //printf("RESET ");
     
     if(shmdt(vector)==-1){
         perror("Fail to detach.");
         exit(1);
     }
+}
+
+
+void InitBuffer(){
+       
+    shmid = shmget(IPC_PRIVATE, sizeof(double)*n*m*4,0666|IPC_CREAT);
+       
+    if(shmid<0){
+	    perror("Fail to create shm \n");
+	    exit(1);
+    }
+    
+    ResetBuffer();
 }
 
 void CalculateAverage(char *filename){
@@ -186,7 +210,7 @@ int main(){
 
     if (child_a == 0) {
         /* Child A code */
-        printf("Test case 1");
+        printf("Test case 1\n");
         char *file = "movie-100k_1.txt";
         CalculateAverage(file);
         printf("1 finish");
@@ -199,30 +223,24 @@ int main(){
     ResetBuffer();
     child_b = fork();
 
-    printf("Test case 2");
 
     if (child_b == 0) {
         /* Child B code */
 
-        //printf("Hi");
+        printf("Test case 2\n");
         CalculateAverage("movie-100k_2.txt");
         
         //printf("Hi");
-    } 
-    else if (child_b == -1){
-        //printf("broken b");
     }
     else {
-        //printf("Hello cc");
+        /* Parent Code */
         
         wait(NULL);
         PrintBuffer();
         ResetBuffer();
-        /* Parent Code */
-        //printf("Hello cc");
         
+        DestroyBuffer();   
     }
-    DestroyBuffer();
 
     return 0;
 }
