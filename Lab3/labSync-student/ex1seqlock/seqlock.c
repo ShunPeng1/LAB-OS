@@ -79,8 +79,8 @@ int test() {
 
 int main()
 {
-   test();
-   /*
+   //test();
+   
    int val = 0;
    pthread_seqlock_init(&lock);
 
@@ -96,5 +96,5 @@ int main()
       pthread_seqlock_rdunlock(&lock);
    }
    //printf("end val = %d\n", val); 
-   */
+   
 }

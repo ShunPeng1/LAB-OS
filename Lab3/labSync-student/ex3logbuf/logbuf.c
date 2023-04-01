@@ -18,6 +18,7 @@ struct _args
 };
 
 pthread_mutex_t mtx;
+pthread_cond_t cond;
 
 void *wrlog(void *data)
 {
@@ -27,11 +28,14 @@ void *wrlog(void *data)
    sprintf(str, "%d", id);
 
    pthread_mutex_lock(&mtx);
+   while(count >= MAX_BUFFER_SLOT){
+      pthread_cond_wait(&cond, &mtx);
+   }
    //Critical Section
 
    strcpy(logbuf[count], str);
-   count = (count >= MAX_BUFFER_SLOT - 1)? count :(count + 1); /* Only increase count to size MAX_BUFFER_SLOT*/
-   printf("wrlog(): %d , count = %d\n", id, count);
+   count = (count >= MAX_BUFFER_SLOT)? count :(count + 1); /* Only increase count to size MAX_BUFFER_SLOT*/
+   //printf("wrlog(): %d , count = %d\n", id, count);
 
    pthread_mutex_unlock(&mtx);
 
@@ -57,7 +61,7 @@ void flushlog()
 
    /*Reset buffer */
    count = 0;
-
+   pthread_cond_broadcast(&cond);
    pthread_mutex_unlock(&mtx);
 
    return;
@@ -85,6 +89,7 @@ int main()
    struct _args args;
    args.interval = 500e3;
    pthread_mutex_init(&mtx, NULL);
+   pthread_cond_init(&cond, NULL);
    /*500 msec ~ 500 * 1000 usec */
 
    /*Setup periodically invoke flushlog() */
