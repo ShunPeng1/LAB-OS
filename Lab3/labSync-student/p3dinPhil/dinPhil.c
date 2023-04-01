@@ -40,6 +40,8 @@ void *philosopher(void *num)
    while (1)
    {
       pthread_cond_wait(&chopstick[phil], &mtx);
+      printf("Philosopher %d takes fork %d first\n",
+	          phil, phil);
       pthread_cond_wait(&chopstick[(phil + 1) % N], &mtx);
       printf("Philosopher %d takes fork %d and %d\n",
 	          phil, phil, (phil + 1) % N);

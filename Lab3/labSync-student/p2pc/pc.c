@@ -3,14 +3,17 @@
 #include <semaphore.h>
 #include <pthread.h>
 
-#define MAX_ITEMS 1
-#define THREADS 1 // 1 producer and 1 consumer
+#define MAX_ITEMS 4
+#define THREADS 2 // 1 producer and 1 consumer
 #define LOOPS 2 * MAX_ITEMS // variable
 
 // Initiate shared buffer
 int buffer[MAX_ITEMS];
 int fill = 0;
 int use = 0;
+sem_t lock;
+sem_t isFull;
+sem_t isEmpty;
 
 /*TODO: Fill in the synchronization stuff */
 void put(int value); // put data into buffer
@@ -21,10 +24,16 @@ void * producer(void * arg) {
   int tid = (int) arg;
   for (i = 0; i < LOOPS; i++) {
     /*TODO: Fill in the synchronization stuff */
+    sem_wait(&isFull);
+    sem_wait(&lock);
+
     put(i); // line P2
     printf("Producer %d put data %d\n", tid, i);
-    sleep(1);
+    //sleep(1);
+
     /*TODO: Fill in the synchronization stuff */
+    sem_post(&isEmpty);
+    sem_post(&lock);
   }
   pthread_exit(NULL);
 }
@@ -34,10 +43,17 @@ void * consumer(void * arg) {
   int tid = (int) arg;
   while (tmp != -1) {
     /*TODO: Fill in the synchronization stuff */
+  
+    sem_wait(&isEmpty);
+    sem_wait(&lock);
+
     tmp = get(); // line C2
     printf("Consumer %d get data %d\n", tid, tmp);
-    sleep(1);
+    //sleep(1);
+
     /*TODO: Fill in the synchronization stuff */
+    sem_post(&isFull);
+    sem_post(&lock);
   }
   pthread_exit(NULL);
 }
@@ -47,9 +63,12 @@ int main(int argc, char ** argv) {
   int tid[THREADS];
   pthread_t producers[THREADS];
   pthread_t consumers[THREADS];
-
+  
   /*TODO: Fill in the synchronization stuff */
-
+  sem_init(&lock, 0, 1);
+  sem_init(&isFull, 0, MAX_ITEMS);
+  sem_init(&isEmpty, 0, 0);
+  
   for (i = 0; i < THREADS; i++) {
     tid[i] = i;
     // Create producer thread
@@ -65,6 +84,9 @@ int main(int argc, char ** argv) {
   }
 
   /*TODO: Fill in the synchronization stuff */
+  sem_destroy(&lock);
+  sem_destroy(&isFull);
+  sem_destroy(&isEmpty);
 
   return 0;
 }
