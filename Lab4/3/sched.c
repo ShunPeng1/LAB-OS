@@ -22,7 +22,9 @@ void * cpu(void * arg) {
 	 * and there is no process in ready queue */
 	while (!load_done || !empty(&ready_queue)) {
 		/* Pickup the first process from the queue */
-		struct pcb_t * proc = de_queue(&ready_queue);
+		struct pcb_t * proc = pick_out_first_highest_priority(&ready_queue);
+		
+		//struct pcb_t * proc = de_queue(&ready_queue);
 		if (proc == NULL) {
 			/* If there is no process in the queue then we
 			 * wait until the next time slice */
@@ -39,12 +41,17 @@ void * cpu(void * arg) {
 			int exec_time = 0;
 
 			// TODO: Calculate exec_time from process's PCB
-			
+			//printf("PROC arrival time: %d, burst time: %d, priority: %d\n", proc->arrival_time, proc->burst_time, proc->priority);
+		
 			// YOUR CODE HERE
-			
-			exec_time = proc->burst_time;
+			if(proc->burst_time > timeslot){
+				exec_time = timeslot;
+			}
+			else{
+				exec_time = proc->burst_time;
+			}
 			proc->burst_time -= exec_time;
-
+			proc->priority -= 1;
 			/* Emulate the execution of the process by using
 			 * 'usleep()' function */
 			usleep(exec_time * TIME_UNIT);
@@ -83,6 +90,7 @@ void * loader(void * arg) {
 		/* Update timestamp and put the new process to ready queue */
 		timestamp += wastetime;
 		en_queue(&ready_queue, proc);
+		//printf("Loader %d\n", proc->arrival_time);
 	}
 	/* We have no process to load */
 	load_done = 1;
@@ -97,8 +105,11 @@ void load_task() {
 		struct pcb_t * proc =
 			(struct pcb_t *)malloc(sizeof(struct pcb_t));
 		scanf("%d %d %d\n", &proc->arrival_time, &proc->burst_time, &proc->priority);
+		
 		proc->pid = i;
 		en_queue(&in_queue, proc);
+		//printf("%d %d %d\n", proc->arrival_time, proc->burst_time, proc->priority);
+
 	}
 }
 
