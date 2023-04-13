@@ -51,7 +51,6 @@ void * cpu(void * arg) {
 				exec_time = proc->burst_time;
 			}
 			proc->burst_time -= exec_time;
-			proc->priority -= 1;
 			/* Emulate the execution of the process by using
 			 * 'usleep()' function */
 			usleep(exec_time * TIME_UNIT);
