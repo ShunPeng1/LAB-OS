@@ -108,7 +108,7 @@ struct pcb_t * pick_out_first_highest_priority(struct pqueue_t * q, int * pNumbe
 	}
 
 	//printf("\nRemove arrival time: %d, burst time: %d, priority: %d\n", highestPriorityItem->data->arrival_time, highestPriorityItem->data->burst_time, highestPriorityItem->data->priority);
-	pNumberOfSamePriority = &(samePriorityCount);
+	*pNumberOfSamePriority = samePriorityCount;
 
 	struct pcb_t * proc;
 	// Remove first highest priority 
