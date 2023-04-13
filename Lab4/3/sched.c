@@ -61,6 +61,7 @@ void * cpu(void * arg) {
 				free(proc);
 			}
 			else{
+				proc->priority += proc->priority > 0? -1 : 0;
 				en_queue(&ready_queue, proc);
 			}
 			
