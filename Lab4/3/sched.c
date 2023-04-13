@@ -22,7 +22,9 @@ void * cpu(void * arg) {
 	 * and there is no process in ready queue */
 	while (!load_done || !empty(&ready_queue)) {
 		/* Pickup the first process from the queue */
-		struct pcb_t * proc = pick_out_first_highest_priority(&ready_queue);
+
+		int numberOfSamePriority = 0;
+		struct pcb_t * proc = pick_out_first_highest_priority(&ready_queue, &numberOfSamePriority);
 		
 		//struct pcb_t * proc = de_queue(&ready_queue);
 		if (proc == NULL) {
@@ -44,7 +46,10 @@ void * cpu(void * arg) {
 			//printf("PROC arrival time: %d, burst time: %d, priority: %d\n", proc->arrival_time, proc->burst_time, proc->priority);
 		
 			// YOUR CODE HERE
-			if(proc->burst_time > timeslot){
+			if(numberOfSamePriority > 1){ // Preemptive
+				exec_time = proc->burst_time;
+			}
+			else if(proc->burst_time > timeslot){ // Round Robin
 				exec_time = timeslot;
 			}
 			else{

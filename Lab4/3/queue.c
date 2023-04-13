@@ -80,7 +80,7 @@ void en_queue(struct pqueue_t * q, struct pcb_t * proc) {
 
 
 /* Return and delete a process with first highest prioirty in a queue */
-struct pcb_t* pick_out_first_highest_priority(struct pqueue_t * q){
+struct pcb_t * pick_out_first_highest_priority(struct pqueue_t * q, int * pNumberOfSamePriority){
 	if(q->head == NULL){
 		return NULL;
 	}
@@ -89,7 +89,7 @@ struct pcb_t* pick_out_first_highest_priority(struct pqueue_t * q){
 	
 	//printf("Find %d->",  q->head->data->arrival_time);
 	// Find first highest priority
-	int highestPriority = q->head->data->priority;
+	int highestPriority = q->head->data->priority, samePriorityCount = 1;
 	struct qitem_t* highestPriorityItem = q->head, *currentItem = q->head, *lastHighestPriorityItem = NULL;
 	while(currentItem->next != NULL){
 		struct qitem_t * next = currentItem->next;
@@ -98,31 +98,35 @@ struct pcb_t* pick_out_first_highest_priority(struct pqueue_t * q){
 			highestPriority = next->data->priority;
 			lastHighestPriorityItem = currentItem;
 			highestPriorityItem = next;
+			samePriorityCount = 1;
+		}
+		else if(next->data->priority == highestPriority){
+			samePriorityCount++;
 		}
 		//printf("%d->",currentItem->next->data->arrival_time);
 		currentItem = next;
 	}
 
-	struct pcb_t *proc = NULL;
-	
 	//printf("\nRemove arrival time: %d, burst time: %d, priority: %d\n", highestPriorityItem->data->arrival_time, highestPriorityItem->data->burst_time, highestPriorityItem->data->priority);
-	
+	pNumberOfSamePriority = &(samePriorityCount);
+
+	struct pcb_t * proc;
 	// Remove first highest priority 
 	if(q->head == q->tail){
-		proc = q->head->data;
+		proc =  (q->head->data);
 		
 		free(q->head);
 		q->head = q->tail = NULL;
 	}
 	else if(q->head == highestPriorityItem){
-		proc = q->head->data;
+		proc =  (q->head->data);
 
 		struct qitem_t * temp = q->head->next; 
 		free(q->head);
 		q->head = temp;
 	}
 	else if(q->tail == highestPriorityItem){
-		proc = q->tail->data;
+		proc =  (q->tail->data);
 
 		//printf("Last %d\n", lastHighestPriorityItem->data->arrival_time);
 		free(q->tail);
@@ -130,14 +134,15 @@ struct pcb_t* pick_out_first_highest_priority(struct pqueue_t * q){
 		q->tail->next = NULL;
 	}
 	else{
-		proc = highestPriorityItem->data;
+		proc = (highestPriorityItem->data);
 
 		//printf("Last %d\n", lastHighestPriorityItem->data->arrival_time);
 		lastHighestPriorityItem->next = highestPriorityItem->next;
 		free(highestPriorityItem);
 	}
 
-
+	printf("VALUE %d\n", *pNumberOfSamePriority);
+	
 	pthread_mutex_unlock(&q->lock);
 
 	return proc;
