@@ -141,7 +141,7 @@ struct pcb_t * pick_out_first_highest_priority(struct pqueue_t * q, int * pNumbe
 		free(highestPriorityItem);
 	}
 
-	printf("VALUE %d\n", *pNumberOfSamePriority);
+	//printf("VALUE %d\n", *pNumberOfSamePriority);
 	
 	pthread_mutex_unlock(&q->lock);
 
