@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define TIME_UNIT	100 // In microsecond
+#define TIME_UNIT	1e5 // In microsecond
 
 static struct pqueue_t in_queue; // Queue for incomming processes
 static struct pqueue_t ready_queue; // Queue for ready processes
@@ -46,8 +46,10 @@ void * cpu(void * arg) {
 			//printf("PROC arrival time: %d, burst time: %d, priority: %d\n", proc->arrival_time, proc->burst_time, proc->priority);
 		
 			// YOUR CODE HERE
-			if(numberOfSamePriority > 1){ // Preemptive
+			printf("Preemp? %d\n", numberOfSamePriority);
+			if(numberOfSamePriority == 1){ // Preemptive
 				exec_time = proc->burst_time;
+		
 			}
 			else if(proc->burst_time > timeslot){ // Round Robin
 				exec_time = timeslot;
