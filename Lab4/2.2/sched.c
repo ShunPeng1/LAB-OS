@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define TIME_UNIT	100 // In microsecond
+#define TIME_UNIT	1e5 // In microsecond
 
 static struct pqueue_t in_queue; // Queue for incomming processes
 static struct pqueue_t ready_queue; // Queue for ready processes

@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define TIME_UNIT	1e2 // In microsecond
+#define TIME_UNIT	1e5 // In microsecond
 
 static struct pqueue_t in_queue; // Queue for incomming processes
 static struct pqueue_t ready_queue; // Queue for ready processes
@@ -47,11 +47,10 @@ void * cpu(void * arg) {
 		
 			// YOUR CODE HERE
 			//printf("Preemp? %d\n", numberOfSamePriority);
-			if(numberOfSamePriority == 1){ // Preemptive
-				exec_time = proc->burst_time;
-		
-			}
-			else if(proc->burst_time > timeslot){ // Round Robin
+			//if(numberOfSamePriority == 1){ // Preemptive
+			//	exec_time = proc->burst_time;
+			//}
+			if(proc->burst_time > timeslot){ // Round Robin
 				exec_time = timeslot;
 			}
 			else{
@@ -94,9 +93,10 @@ void * loader(void * arg) {
 		int wastetime = proc->arrival_time - timestamp;
 		usleep(wastetime * TIME_UNIT);
 		/* Update timestamp and put the new process to ready queue */
+		//printf("%d- %d: Loader %d\n", timestamp, timestamp + wastetime,proc->arrival_time);
+	
 		timestamp += wastetime;
 		en_queue(&ready_queue, proc);
-		//printf("Loader %d\n", proc->arrival_time);
 	}
 	/* We have no process to load */
 	load_done = 1;
